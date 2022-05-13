@@ -1,0 +1,19 @@
+{
+  "name": "reminderbot",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "moment": "^2.29.3",
+    "moment-timezone": "^0.5.34",
+    "node-schedule": "^2.1.0",
+    "node-telegram-bot-api": "^0.57.0"
+  }
+}
