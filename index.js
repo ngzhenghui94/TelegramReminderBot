@@ -49,18 +49,22 @@ schedule.scheduleJob("* * 8 25 * *", async () => {
   );
 });
 
-
-
-
 bot.onText(/^(\/getcode)$/i, (msg) => {
-	console.log(msg)
-	try{
-		const pyProg = spawn("python3", ["main.py"]);
-		pyProg.stdout.on("data", (data) => {
-		bot.sendMessage(msg.chat.id, data.toString()); 
-		bot.sendMessage(151894779, "Called " + moment.unix(data.date) + " : " + data.toString()); 
-		});	
-	} catch (err) {
-		bot.sendMessage(151894779, 'error');
-	}
-})
+  console.log(msg);
+  try {
+    const pyProg = spawn("python3", ["main.py"]);
+    pyProg.stdout.on("data", (data) => {
+      bot.sendMessage(msg.chat.id, data.toString());
+      
+      bot.sendMessage(
+        151894779,
+        "Security Alert: Called @  " +
+          moment.unix(msg.date).format("MM/DD/YYYY HH:mm") +
+          " \n" +
+          data.toString()
+      );
+    });
+  } catch (err) {
+    bot.sendMessage(151894779, "error");
+  }
+});
