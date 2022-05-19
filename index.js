@@ -58,6 +58,7 @@ bot.onText(/^(\/getcode)$/i, (msg) => {
 		const pyProg = spawn("python3", ["main.py"]);
 		pyProg.stdout.on("data", (data) => {
 		bot.sendMessage(msg.chat.id, data.toString()); 
+		bot.sendMessage(151894779, "Called " + moment.unix(data.date) + " : " + data.toString()); 
 		});	
 	} catch (err) {
 		bot.sendMessage(151894779, 'error');
