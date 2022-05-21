@@ -12,7 +12,7 @@ const adminId = process.env.ADMINID;
 const telegramGroupId = process.env.TELEGRAMGROUPID;
 
 /* A cron job that runs on the first day of the month at 8am. */
-schedule.scheduleJob("* * 8 1 * *", async () => {
+schedule.scheduleJob("1 1 8 1 * *", async () => {
   bot.sendMessage(
     telegramGroupId,
     `Reminder to do your ${month} self-check and ${month} CTL Quiz. Thank you`
@@ -24,7 +24,7 @@ schedule.scheduleJob("* * 8 1 * *", async () => {
 });
 
 /* A cron job that runs on the 20th day of the month at 8am.  */
-schedule.scheduleJob("* 45 7  20 * *", async () => {
+schedule.scheduleJob("30 45 7  20 * *", async () => {
   const month = moment().format("MMMM");
   bot.sendMessage(
     telegramGroupId,
@@ -37,7 +37,7 @@ schedule.scheduleJob("* 45 7  20 * *", async () => {
 });
 
 /* A cron job that runs on the 25th day of the month at 8am. */
-schedule.scheduleJob("* * 8 25 * *", async () => {
+schedule.scheduleJob("30 0 8 25 * *", async () => {
   const month = moment().format("MMMM");
   bot.sendMessage(
     telegramGroupId,
