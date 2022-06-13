@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import fs from "fs";
 import { spawn } from "child_process";
+import Sequelize from "./database/connect.js"
 
 const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 const adminId = process.env.ADMINID;
