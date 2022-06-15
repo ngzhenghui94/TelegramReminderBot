@@ -7,7 +7,7 @@ Reminders.init({
     uuid: Sequelize.STRING,
     addedon: Sequelize.DATE,
     addedby: Sequelize.STRING,
-    reminderdatetime: Sequelize.DATE,
+    reminderdatetime: Sequelize.STRING,
 },{
     sequelize,
     modelName: "Reminders",
@@ -18,5 +18,10 @@ Reminders.init({
 console.log("🚀 ~ file: index.js ~ line 5 ~ const test = sequelize.define('reminders', Reminders)", Reminders === sequelize.models.Reminders)
 
 // console.log(await Reminders.findAll())
+
+// Reminders.sync({alter: true, force: true})
+//   .then(()=>{
+//     console.log("Synced Reminders Table!")
+//   });
 
 export default Reminders

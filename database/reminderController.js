@@ -1,7 +1,7 @@
 import Reminders from "../model/index.js";
 
 const findAll = async (data) => {
-    const result = await Reminders.findAll()
+    const result = await Reminders.findAll({raw: true})
     return result
 }
 

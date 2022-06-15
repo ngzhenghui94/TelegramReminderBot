@@ -6,43 +6,106 @@ import dotenv from "dotenv";
 dotenv.config();
 import { spawn } from "child_process";
 import ReminderController from './database/reminderController.js'
+import reminderController from "./database/reminderController.js";
 
 
 
 // let data = {
-//   uuid: "wwfw",
-//   reminderdatetime: moment().format(),
+//   uuid: "03456789",
+//   reminderdatetime: "03",
 //   addedon: moment().format(),
 //   addedby: "Daniel"
-
 // }
-console.log(ReminderController.findAll())
+// const test = async () => {
+//   await reminderController.findAll().then((result) => {
+//     console.log(result)
+//   })
+// }
+// test()
+// console.log(ReminderController.findAll())
 // console.log(ReminderController.addReminder(data))
-
 
 const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 const adminId = process.env.ADMINID;
-const telegramGroupId = process.env.TELEGRAMGROUPID;
+const telegramGroupId = process.env.TELEGRAMGROUPID
 
-bot.onText(/^(\/getSchedule)$/i, (msg) => {
-  console.log(msg);
-  try {
-    let reminders = ReminderController.findAll();
-    bot.sendMessage(msg.chat.id, reminders.toString());
-    bot.sendMessage(
-      151894779,
-      "Reminders Alert: Called @  " +
-      moment.unix(msg.date).format("MM/DD/YYYY HH:mm") +
-      " \n" +
-      data.toString()
-    );
-  } catch (err) {
-    bot.sendMessage(151894779, "reminder error");
-  }
+const init = async () => {
+  bot.sendMessage(adminId, "Reminders checked and updated.");
+  return await ReminderController.findAll().then(async (result) => {
+    for (let i = 0; i < result.length; i++) {
+      schedule.scheduleJob("1 1 8 " + result[i].reminderdatetime + " * *", async () => {
+        bot.sendMessage(
+          telegramGroupId,
+          `Reminder to do your ${month} self-check and ${month} CTL Quiz. Thank you`
+        );
+        bot.sendMessage(
+          adminId,
+          `I have sent reminder to do your ${month} CTL Quiz. Thank you.`
+        );
+      })
+    }
+  })
+}
+init();
+
+bot.onText(/^(\/getSchedule)$/i, async (msg) => {
+  // console.log(msg);
+  return await ReminderController.findAll().then(async (result) => {
+    try {
+      // console.log(result)
+      let returnMsg = "|  UUID  |   Reminder Date   |   Added By   |    Added On   |\n";
+      console.log(moment(result[3].reminderdatetime).tz("Asia/Singapore").format("DDMMYY HH:mm"))
+      for (let i = 0; i < result.length; i++) {
+        returnMsg += `|   ${result[i].uuid}  |   ${moment(result[i].reminderdatetime).format("DDMMYY HH:mm")}   |   ${result[i].addedby}   |   ${moment(result[i].addedon).format("DDMMYY HH:mm")}   |\n`;
+      }
+      bot.sendMessage(msg.chat.id, returnMsg);
+      bot.sendMessage(
+        151894779,
+        "Reminders Alert: Called @  " +
+        moment.unix(msg.date).format("MM/DD/YYYY HH:mm") +
+        " \n" +
+        data.toString()
+      );
+    } catch (err) {
+      bot.sendMessage(151894779, "reminder error");
+    }
+  })
 });
+
+//node schedule job that runs at midnight everyday
+const rule = new schedule.RecurrenceRule();
+rule.hour = 0;
+rule.minute = 0;
+rule.second = 30;
+rule.dayOfWeek = [new schedule.Range(1, 7)];
+
+//At midnight, re-check and update all scheduled reminders
+const job = schedule.scheduleJob(rule, async () => {
+  const month = moment().format("MMMM");
+  bot.sendMessage(adminId, "Reminders checked and updated.");
+  return ReminderController.findAll().then(async (result) => {
+    for (let i = 0; i < result.length; i++) {
+      schedule.scheduleJob("1 1 8 " + result[i].reminderdatetime + " * *", async () => {
+        bot.sendMessage(
+          telegramGroupId,
+          `Reminder to do your ${month} self-check and ${month} CTL Quiz. Thank you`
+        );
+        bot.sendMessage(
+          adminId,
+          `I have sent reminder to do your ${month} CTL Quiz. Thank you.`
+        );
+      })
+    }
+  })
+});
+
+
+
+
 
 /* A cron job that runs on the first day of the month at 8am. */
 schedule.scheduleJob("1 1 8 1 * *", async () => {
+  const month = moment().format("MMMM");
   bot.sendMessage(
     telegramGroupId,
     `Reminder to do your ${month} self-check and ${month} CTL Quiz. Thank you`
