@@ -4,13 +4,27 @@ moment.tz.setDefault("Asia/Singapore");
 import schedule from "node-schedule-tz";
 import dotenv from "dotenv";
 dotenv.config();
-import fs from "fs";
 import { spawn } from "child_process";
-import Sequelize from "./database/connect.js"
+import ReminderController from './database/reminderController.js'
+
+
+
+// let data = {
+//   uuid: "wwfw",
+//   reminderdatetime: moment().format(),
+//   addedon: moment().format(),
+//   addedby: "Daniel"
+
+// }
+console.log(ReminderController.findAll())
+// console.log(ReminderController.addReminder(data))
+
 
 const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 const adminId = process.env.ADMINID;
 const telegramGroupId = process.env.TELEGRAMGROUPID;
+
+
 
 /* A cron job that runs on the first day of the month at 8am. */
 schedule.scheduleJob("1 1 8 1 * *", async () => {
@@ -56,13 +70,13 @@ bot.onText(/^(\/getcode)$/i, (msg) => {
     const pyProg = spawn("python3", ["main.py"]);
     pyProg.stdout.on("data", (data) => {
       bot.sendMessage(msg.chat.id, data.toString());
-      
+
       bot.sendMessage(
         151894779,
         "Security Alert: Called @  " +
-          moment.unix(msg.date).format("MM/DD/YYYY HH:mm") +
-          " \n" +
-          data.toString()
+        moment.unix(msg.date).format("MM/DD/YYYY HH:mm") +
+        " \n" +
+        data.toString()
       );
     });
   } catch (err) {

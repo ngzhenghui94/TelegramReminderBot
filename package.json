@@ -17,6 +17,7 @@
     "node-schedule": "^2.1.0",
     "node-schedule-tz": "^1.2.1-4",
     "node-telegram-bot-api": "^0.57.0",
+    "reflect-metadata": "^0.1.13",
     "sequelize": "^6.20.1"
   }
 }
