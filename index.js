@@ -24,7 +24,22 @@ const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 const adminId = process.env.ADMINID;
 const telegramGroupId = process.env.TELEGRAMGROUPID;
 
-
+bot.onText(/^(\/getSchedule)$/i, (msg) => {
+  console.log(msg);
+  try {
+    let reminders = ReminderController.findAll();
+    bot.sendMessage(msg.chat.id, reminders.toString());
+    bot.sendMessage(
+      151894779,
+      "Reminders Alert: Called @  " +
+      moment.unix(msg.date).format("MM/DD/YYYY HH:mm") +
+      " \n" +
+      data.toString()
+    );
+  } catch (err) {
+    bot.sendMessage(151894779, "reminder error");
+  }
+});
 
 /* A cron job that runs on the first day of the month at 8am. */
 schedule.scheduleJob("1 1 8 1 * *", async () => {
