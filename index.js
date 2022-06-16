@@ -17,7 +17,7 @@ import reminderController from "./database/reminderController.js";
 //   addedby: "Daniel"
 // }
 // const test = async () => {
-//   await reminderController.findAll().then((result) => {
+//    return await reminderController.findAll().then((result) => {
 //     console.log(result)
 //   })
 // }
@@ -31,7 +31,8 @@ const telegramGroupId = process.env.TELEGRAMGROUPID
 
 const init = async () => {
   bot.sendMessage(adminId, "Reminders checked and updated.");
-  return await ReminderController.findAll().then(async (result) => {
+  return await ReminderController.findAll().then((result) => {
+    // console.log(result)
     for (let i = 0; i < result.length; i++) {
       schedule.scheduleJob("1 1 8 " + result[i].reminderdatetime + " * *", async () => {
         bot.sendMessage(
@@ -50,27 +51,28 @@ init();
 
 bot.onText(/^(\/getSchedule)$/i, async (msg) => {
   // console.log(msg);
-  return await ReminderController.findAll().then(async (result) => {
+  return await ReminderController.findAll().then((result) => {
     try {
-      // console.log(result)
-      let returnMsg = "|  UUID  |   Reminder Date   |   Added By   |    Added On   |\n";
-      console.log(moment(result[3].reminderdatetime).tz("Asia/Singapore").format("DDMMYY HH:mm"))
+      // console.log(result[0])
+      let returnMsg = "|  ID  |   Reminder Date   |   Added By   |    Added On   |   Desc   |\n";
+      // console.log(moment(result[3].reminderdatetime).tz("Asia/Singapore").format("DDMMYY HH:mm"))
       for (let i = 0; i < result.length; i++) {
-        returnMsg += `|   ${result[i].uuid}  |   ${moment(result[i].reminderdatetime).format("DDMMYY HH:mm")}   |   ${result[i].addedby}   |   ${moment(result[i].addedon).format("DDMMYY HH:mm")}   |\n`;
+        returnMsg += `|   ${result[i].id}   |      ${result[i].reminderdatetime}       |   ${result[i].addedby}   |   ${moment(result[i].addedon).format("DDMMYY HH:mm")}   |   ${result[i].description}   |\n`;
       }
+      // console.log(returnMsg)
       bot.sendMessage(msg.chat.id, returnMsg);
       bot.sendMessage(
         151894779,
-        "Reminders Alert: Called @  " +
-        moment.unix(msg.date).format("MM/DD/YYYY HH:mm") +
-        " \n" +
-        data.toString()
+        "Reminders Alert: Called @ " +
+        moment.unix(msg.date).format("MM/DD/YYYY HH:mm")
       );
     } catch (err) {
-      bot.sendMessage(151894779, "reminder error");
+      bot.sendMessage(151894779, "reminder error" + err);
     }
   })
 });
+
+
 
 //node schedule job that runs at midnight everyday
 const rule = new schedule.RecurrenceRule();

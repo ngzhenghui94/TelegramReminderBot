@@ -8,6 +8,7 @@ Reminders.init({
     addedon: Sequelize.DATE,
     addedby: Sequelize.STRING,
     reminderdatetime: Sequelize.STRING,
+    description: Sequelize.STRING
 },{
     sequelize,
     modelName: "Reminders",
