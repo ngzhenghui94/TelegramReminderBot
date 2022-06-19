@@ -1,12 +1,10 @@
 create table Reminders
 (
-    id         int auto_increment
+    id               int auto_increment
         primary key,
-    uuid      varchar(255) not null,
-    reminderdatetime    datetime not null,
-    addedby     varchar(255)          not null,
-    addedon datetime   not null
+    uuid             varchar(255) null,
+    addedon          datetime     null,
+    addedby          varchar(255) null,
+    reminderdatetime varchar(255) null
 );
 
-create index id
-    on blogs (id);
