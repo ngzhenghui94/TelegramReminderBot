@@ -7,7 +7,8 @@ Reminders.init({
     uuid: Sequelize.STRING,
     addedon: Sequelize.DATE,
     addedby: Sequelize.STRING,
-    reminderdatetime: Sequelize.STRING,
+    reminderdate: Sequelize.STRING,
+    remindertime: Sequelize.STRING,
     description: Sequelize.STRING
 },{
     sequelize,

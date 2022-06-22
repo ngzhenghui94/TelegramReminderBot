@@ -1,40 +1,68 @@
 import Reminders from "../model/index.js";
 
-const findAll = async (data) => {
-    const result = await Reminders.findAll({ raw: true })
-    return result
+const findAll = async () => {
+    try {
+        const result = await Reminders.findAll({
+            raw: true
+            , order: [
+                ['reminderdate'],
+            ],
+        })
+        return result
+    } catch (err) {
+        return err
+    }
 }
 
 const addReminder = async (data) => {
-    const result = await Reminders.create(data)
-    return result
+    try {
+        const result = await Reminders.create(data)
+        return result
+    } catch (err) {
+        return err
+    }
 }
 
 const delReminder = async (data) => {
-    const result = await Reminders.destroy({
-        where: {
-            id: data
-        }
-    })
-    return result
+    try {
+        const result = await Reminders.destroy({
+            where: {
+                id: data
+            }
+        })
+        return result
+    } catch (err) {
+        return err
+    }
+
 }
 
 const findReminder = async (data) => {
-    const result = await Reminders.findOne({
-        where: {
-            id: data
-        }
-    })
-    return result
+    try {
+        const result = await Reminders.findOne({
+            where: {
+                id: data
+            }
+        })
+        return result
+    } catch (err) {
+        return err
+    }
+
 }
 
 const cleanReminders = async () => {
-    const result = await Reminders.destroy({
-        where: {
-            description: ""
-        }
-    })
-    return result
+    try {
+        const result = await Reminders.destroy({
+            where: {
+                description: ""
+            }
+        })
+        return result
+    } catch (err) {
+        return err
+    }
+
 }
 
 

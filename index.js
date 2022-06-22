@@ -17,14 +17,11 @@ const init = async () => {
   return await ReminderController.findAll().then((result) => {
     // console.log(result)
     for (let i = 0; i < result.length; i++) {
-      schedule.scheduleJob("1 1 8 " + result[i].reminderdatetime + " * *", async () => {
+      // console.log("1 " + result[i].remindertime[2]+result[i].remindertime[3]+ " " + result[i].remindertime[0]+result[i].remindertime[1] + " " + result[i].reminderdate + " * *")
+      schedule.scheduleJob("1 " + result[i].remindertime[2] + result[i].remindertime[3] + " " + result[i].remindertime[0] + result[i].remindertime[1] + " " + result[i].reminderdate + " * *", async () => {
         bot.sendMessage(
           telegramGroupId,
           `Reminder: ${result[i].description}. Thank you`
-        );
-        bot.sendMessage(
-          adminId,
-          `I have sent reminder to do your ${month} CTL Quiz. Thank you.`
         );
       })
     }
@@ -37,10 +34,10 @@ bot.onText(/^(\/getSchedule|\/get)$/i, async (msg) => {
   return await ReminderController.findAll().then((result) => {
     try {
       // console.log(result[0])
-      let returnMsg = "|  ID  |   Reminder Date   |   Added By   |    Added On   |   Desc   |\n";
+      let returnMsg = "|  ID  |   Reminder Date & Time  |   Added By   |    Added On   |   Desc   |\n";
       // console.log(moment(result[3].reminderdatetime).tz("Asia/Singapore").format("DDMMYY HH:mm"))
       for (let i = 0; i < result.length; i++) {
-        returnMsg += `|   ${result[i].id}   |      ${result[i].reminderdatetime}       |   ${result[i].addedby}   |   ${moment(result[i].addedon).format("DDMMYY HH:mm")}   |   ${result[i].description}   |\n`;
+        returnMsg += `|   ${result[i].id}   |      ${result[i].reminderdate} - ${result[i].remindertime}      |   ${result[i].addedby}   |   ${moment(result[i].addedon).format("DDMMYY HH:mm")}   |   ${result[i].description}   |\n`;
       }
       // console.log(returnMsg)
       bot.sendMessage(msg.chat.id, returnMsg);
@@ -55,20 +52,51 @@ bot.onText(/^(\/getSchedule|\/get)$/i, async (msg) => {
   })
 });
 
+bot.onText(/^(\/resync)$/i, async (msg) => {
+  bot.sendMessage(adminId, "Reminders checked and updated.");
+  await ReminderController.cleanReminders()
+  let jobList = schedule.scheduledJobs;
+  let jobNameList = [];
+  for (const keys in jobList) {
+    jobNameList.push(jobList[keys].name);
+  }
+  for (let i = 0; i < jobNameList.length; i++) {
+    jobList[jobNameList[i]].cancel()
+  }
+  return await ReminderController.findAll().then((result) => {
+    // console.log(result)
+    for (let i = 0; i < result.length; i++) {
+      // console.log("1 " + result[i].remindertime[2]+result[i].remindertime[3]+ " " + result[i].remindertime[0]+result[i].remindertime[1] + " " + result[i].reminderdate + " * *")
+      schedule.scheduleJob("1 " + result[i].remindertime[2] + result[i].remindertime[3] + " " + result[i].remindertime[0] + result[i].remindertime[1] + " " + result[i].reminderdate + " * *", async () => {
+        bot.sendMessage(
+          telegramGroupId,
+          `Reminder: ${result[i].description}. Thank you`
+        );
+      })
+    }
+    bot.sendMessage(
+      msg.chat.id,
+      `Jobs resynced. Total Count : ${result.length}`
+    );
+  })
+});
+
 bot.onText(/^(\/seejobs|\/see)$/i, async (msg) => {
   // console.log(msg);
   try {
     let jobList = schedule.scheduledJobs;
     let jobNameList = [];
+    bot.sendMessage(msg.chat.id, "Checking all scheduled jobs. /resync to force.");
     for (const keys in jobList) {
       jobNameList.push(jobList[keys].name);
     }
     for (let i = 0; i < jobNameList.length; i++) {
       console.log(jobList[jobNameList[i]].nextInvocation());
-      bot.sendMessage(msg.chat.id, "Jobs: " + jobList[jobNameList[i]].nextInvocation());
+      let stringTime = (jobList[jobNameList[i]].nextInvocation()).toString()
+      bot.sendMessage(msg.chat.id, "[" + (i + 1) + "] Reminders Date & Time: " + moment(stringTime).format("DD-HHmm") + "H");
     }
   } catch (err) {
-    bot.sendMessage(151894779, "seejobs error" + err);
+    bot.sendMessage(151894779, "see jobs error" + err);
   }
 });
 
@@ -110,42 +138,53 @@ bot.onText(/(\/delReminder|\/del)(.*)/i, async (msg) => {
 
 bot.onText(/(\/addReminder|\/add)(.*)/i, async (msg) => {
   const endOfMonth = moment().endOf('month').format('DD');
-
   let obj = {
     uuid: "",
-    reminderdatetime: "",
+    reminderdate: "",
+    remindertime: "",
     addedon: "",
     addedby: "",
     description: ""
   }
-  if (msg.from.id == adminId) {
+  if (true) {
+    // if (msg.from.id == adminId) {
     bot.sendMessage(msg.chat.id, "Please send your date of reminder");
     bot.once("message", async (msg) => {
       if (parseInt(msg.text) && parseInt(msg.text) <= endOfMonth && parseInt(msg.text) > 0) {
-        obj.reminderdatetime = msg.text
-        bot.sendMessage(msg.chat.id, "Please add your description");
+        obj.reminderdate = msg.text
+        bot.sendMessage(msg.chat.id, "Please send your time of reminder");
         bot.once("message", async (msg) => {
-          obj.description = msg.text
-          obj.addedby = msg.from.last_name != undefined ? msg.from.first_name + " " + msg.from.last_name : msg.from.first_name
-          obj.addedon = moment().format()
-          obj.uuid = msg.from.id
-          // console.log(obj)
-          return await ReminderController.addReminder(obj).then(async (result) => {
-            // console.log(result)
-            bot.sendMessage(msg.chat.id, "Reminder added.");
-            return await ReminderController.findAll().then((result) => {
-              // console.log(result)
-              let returnMsg = "|  ID  |   Reminder Date   |   Added By   |    Added On   |   Desc   |\n";
-              for (let i = 0; i < result.length; i++) {
-                returnMsg += `|   ${result[i].id}   |      ${result[i].reminderdatetime}       |   ${result[i].addedby}   |   ${moment(result[i].addedon).format("DDMMYY HH:mm")}   |   ${result[i].description}   |\n`;
-              }
-              bot.sendMessage(msg.chat.id, returnMsg);
+          if (parseInt(msg.text) && parseInt(msg.text) <= 2359 && parseInt(msg.text) >= 0) {
+            obj.remindertime = msg.text
+            bot.sendMessage(msg.chat.id, "Please add your description");
+            bot.once("message", async (msg) => {
+              obj.description = msg.text
+              obj.addedby = msg.from.last_name != undefined ? msg.from.first_name + " " + msg.from.last_name : msg.from.first_name
+              obj.addedon = moment().format()
+              obj.uuid = msg.from.id
+              // console.log("obj" + JSON.stringify(obj))
+              return await ReminderController.addReminder(obj).then(async (result) => {
+                // console.log("result" + result)
+                bot.sendMessage(msg.chat.id, "Reminder added.");
+                schedule.scheduleJob("1 " + obj.remindertime[2] + obj.remindertime[3] + " " + obj.remindertime[0] + obj.remindertime[1] + " " + obj.reminderdate + " * *")
+                return await ReminderController.findAll().then((result) => {
+                  // console.log("result" + result)
+                  let returnMsg = "|  ID  |   Reminder Date   |   Added By   |    Added On   |   Desc   |\n";
+                  for (let i = 0; i < result.length; i++) {
+                    returnMsg += `|   ${result[i].id}   |      ${result[i].reminderdate} - ${result[i].remindertime}      |   ${result[i].addedby}   |   ${moment(result[i].addedon).format("DDMMYY HH:mm")}   |   ${result[i].description}   |\n`;
+                  }
+                  bot.sendMessage(msg.chat.id, returnMsg)
+                })
+              })
             })
-          })
+          }
         })
-      } else if (msg.from.id != adminId) {
-        bot.sendMessage(msg.chat.id, "You are not authorized to add reminder.");
+        // } 
+        // else if (msg.from.id != adminId) {
+        //   bot.sendMessage(msg.chat.id, "You are not authorized to add reminder.");
       } else if (parseInt(msg.text) >= endOfMonth || parseInt(msg.text) < 0) {
+        bot.sendMessage(msg.chat.id, "Invalid Date. The end of this month is " + endOfMonth + ".\nPlease enter a valid date between 1 to " + endOfMonth + ".");
+      } else {
         bot.sendMessage(msg.chat.id, "Invalid Date. The end of this month is " + endOfMonth + ".\nPlease enter a valid date between 1 to " + endOfMonth + ".");
       }
     })
@@ -154,33 +193,33 @@ bot.onText(/(\/addReminder|\/add)(.*)/i, async (msg) => {
   }
 });
 
-//node schedule job that runs at midnight everyday
-const rule = new schedule.RecurrenceRule();
-rule.hour = 23;
-rule.minute = 59;
-rule.second = 59;
-rule.dayOfWeek = [new schedule.Range(1, 7)];
-rule.tz = "Asia/Singapore";
+// //node schedule job that runs at midnight everyday
+// const rule = new schedule.RecurrenceRule();
+// rule.hour = new schedule.Range(0, 23, 4);
+// rule.minute = 0;
+// rule.second = 1;
+// rule.dayOfWeek = [new schedule.Range(1, 7)];
+// rule.tz = "Asia/Singapore";
 
-//At midnight, re-check and update all scheduled reminders
-const job = schedule.scheduleJob(rule, async () => {
-  const month = moment().format("MMMM");
-  bot.sendMessage(adminId, "Reminders checked and updated.");
-  return ReminderController.findAll().then(async (result) => {
-    for (let i = 0; i < result.length; i++) {
-      schedule.scheduleJob("1 0 8 " + result[i].reminderdatetime + " * *", async () => {
-        bot.sendMessage(
-          telegramGroupId,
-          `Reminder: ${result[i].description}. Thank you`
-        );
-        bot.sendMessage(
-          adminId,
-          `I have sent reminder to do your ${month} CTL Quiz. Thank you.`
-        );
-      })
-    }
-  })
-});
+// //At midnight, re-check and update all scheduled reminders
+// const job = schedule.scheduleJob(rule, async () => {
+//   const month = moment().format("MMMM");
+//   bot.sendMessage(adminId, "Reminders checked and updated.");
+//   return ReminderController.findAll().then(async (result) => {
+//     for (let i = 0; i < result.length; i++) {
+//       schedule.scheduleJob("1 " + result[i].remindertime[2]+result[i].remindertime[3]+ " " + result[i].remindertime[0]+result[i].remindertime[1] + " " + result[i].reminderdate + " * *", async () => {
+//         bot.sendMessage(
+//           telegramGroupId,
+//           `Reminder: ${result[i].description}. Thank you`
+//         );
+//         bot.sendMessage(
+//           adminId,
+//           `I have sent reminder to do your ${month} CTL Quiz. Thank you.`
+//         );
+//       })
+//     }
+//   })
+// });
 
 
 bot.onText(/^(\/getcode)$/i, (msg) => {
