@@ -1,4 +1,5 @@
-import Reminders from "../model/index.js";
+import Reminders from "../model/reminders.js";
+import Admins from "../model/admin.js";
 
 const findAll = async () => {
     try {
