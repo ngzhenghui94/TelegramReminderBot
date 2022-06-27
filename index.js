@@ -136,6 +136,46 @@ bot.onText(/(\/delReminder|\/del)(.*)/i, async (msg) => {
 
 })
 
+bot.onText(/(\/registeradmin)/i, async (msg) => {
+  let obj = {
+    teleid: 0,
+    telename: ""
+  }
+  let adminList = []
+  const res = await Controller.findAllAdmin()
+  res.forEach(admin => {
+    adminList.push(admin.teleid)
+  })
+  if (adminList.includes(msg.from.id)) {
+    if (msg.reply_to_message === undefined) {
+      bot.sendMessage(msg.chat.id, "Please reply to a msg of the person you want to register as an admin.")
+    } else {
+      obj.teleid = msg.reply_to_message.from.id
+      obj.telename = msg.reply_to_message.from.first_name
+      const addAdminRes = await Controller.addAdmin(obj)
+      if (addAdminRes) {
+        bot.sendMessage(msg.chat.id, "Admin added. Server msg: " + JSON.stringify(addAdminRes))
+      } else {
+        bot.sendMessage(msg.chat.id, "Admin already exists. Server err msg: " + JSON.stringify(addAdminRes))
+      }
+    }
+  } else {
+    bot.sendMessage(msg.chat.id, "You are not authorized to add admin.");
+  }
+})
+
+bot.onText(/(\/listadmin)/i, async (msg) => {
+  await Controller.findAllAdmin().then((res) => {
+    try {
+      console.log(res)
+      bot.sendMessage(msg.chat.id, JSON.stringify(res))
+    } catch (err) {
+      bot.sendMessage(msg.chat.id, "err")
+    }
+  })
+})
+
+
 bot.onText(/(\/addReminder|\/add)(.*)/i, async (msg) => {
   const endOfMonth = moment().endOf('month').format('DD');
   let obj = {
@@ -152,7 +192,7 @@ bot.onText(/(\/addReminder|\/add)(.*)/i, async (msg) => {
     bot.once("message", async (msg) => {
       if (parseInt(msg.text) && parseInt(msg.text) <= endOfMonth && parseInt(msg.text) > 0) {
         let inputdate = msg.text
-        if (inputdate.length == 1){
+        if (inputdate.length == 1) {
           inputdate = "0" + inputdate
         }
         obj.reminderdate = inputdate
