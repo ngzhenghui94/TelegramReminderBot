@@ -1,0 +1,1 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/ngzhenghui94/telegramreminderbot/badge)](https://www.codefactor.io/repository/github/ngzhenghui94/telegramreminderbot)
