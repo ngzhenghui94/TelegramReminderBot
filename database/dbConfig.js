@@ -14,6 +14,7 @@ let SQL_CONFIG = {
     database: DBNAME,
     username: DBUSER,
     password: DBPASSWORD,
+    port: 11115,
     dialect: "mysql",
     options: {
         host: DBHOSTNAME,
