@@ -1,15 +1,28 @@
 import Reminders from "../model/reminders.js";
+import RemindersV2 from "../model/messageReminder.js"
 import Admins from "../model/admin.js";
 
-const findAll = async () => {
+
+
+const findAll = async (type) => {
     try {
-        const result = await Reminders.findAll({
-            raw: true
-            , order: [
-                ['reminderdate'],
-            ],
-        })
-        return result
+        if (type == "V2") {
+            const result = await RemindersV2.findAll({
+                raw: true
+                , order: [
+                    ['addedon'],
+                ],
+            })
+            return result
+        } else {
+            const result = await Reminders.findAll({
+                raw: true
+                , order: [
+                    ['addedon'],
+                ],
+            })
+            return result
+        }
     } catch (err) {
         return err
     }
@@ -17,8 +30,14 @@ const findAll = async () => {
 
 const addReminder = async (data) => {
     try {
-        const result = await Reminders.create(data)
-        return result
+        if (data.type == "V2") {
+            const result = await RemindersV2.create(data)
+            return result
+        } else {
+            const result = await Reminders.create(data)
+            return result
+        }
+
     } catch (err) {
         return err
     }
@@ -26,12 +45,22 @@ const addReminder = async (data) => {
 
 const delReminder = async (data) => {
     try {
-        const result = await Reminders.destroy({
-            where: {
-                id: data
-            }
-        })
-        return result
+        if (data.type == "V2") {
+            const result = await RemindersV2.destroy({
+                where: {
+                    msgId: data.msgId
+                }
+            })
+            return result
+        } else {
+            const result = await Reminders.destroy({
+                where: {
+                    id: data
+                }
+            })
+            return result
+        }
+
     } catch (err) {
         return err
     }
@@ -98,6 +127,29 @@ const findAllAdmin = async () => {
     }
 }
 
+const findAllRemindersTwo = async () => {
+    try {
+        const result = await RemindersV2.findAll({ raw: true })
+        return result
+    } catch (err) {
+        return err
+    }
+}
+
+const findByMsgId = async (data) => {
+    try {
+        const result = await RemindersV2.findOne({
+            where: {
+                msgId: data
+            },
+            raw: true
+        })
+        return result
+    } catch (err) {
+        return err
+    }
+}
+
 
 export default {
     findAll,
@@ -106,5 +158,7 @@ export default {
     findReminder,
     cleanReminders,
     findAllAdmin,
-    addAdmin
+    findAllRemindersTwo,
+    addAdmin,
+    findByMsgId
 }

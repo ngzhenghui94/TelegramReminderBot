@@ -7,6 +7,7 @@ dotenv.config();
 import { spawn } from "child_process";
 import Controller from './database/controller.js';
 
+
 const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 const adminId = process.env.ADMINID;
 const telegramGroupId = process.env.TELEGRAMGROUPID
@@ -176,6 +177,74 @@ bot.onText(/(\/listadmin)/i, async (msg) => {
 })
 
 
+bot.onText(/(\@remind)/i, async (msg) => {
+  try {
+    console.log(msg)
+    let obj = {
+      uuid: msg.from.id,
+      msgId: msg.message_id,
+      remindMsgId: msg.reply_to_message.message_id,
+      chatId: msg.chat.id,
+      addedon: msg.date,
+      type: "V2"
+    }
+
+    return await Controller.addReminder(obj).then(async (result) => {
+      bot.sendMessage(obj.chatId, "Noted. Reminders will be sent everyday at 0730H and 1130H", {
+        reply_to_message_id: obj.remindMsgId
+      })
+      console.log(result)
+    })
+  } catch (err) {
+    console.log(err)
+  }
+
+})
+
+// bot.onText(/(\@showremind)/i, async (msg) => {
+//   try {
+//     return await Controller.findAllRemindersTwo().then(async (result)=>{
+//       let returnMsg = ""
+//       for(let i = 0; i < result.length; i++){
+//         returnMsg += 
+//       }
+//     })
+//   } catch (err) {
+//     console.log(err)
+//   }
+// })
+
+bot.onText(/(\@delete)/i, async (msg) => {
+  try {
+    console.log(msg.text.split(" ")[1])
+    let obj = {
+      type: "V2",
+      msgId: msg.text.split(" ")[1]
+    }
+    return await Controller.findByMsgId(obj.msgId).then(async (result) => {
+      console.log(msg.from.id)
+      if (result.uuid == msg.from.id || result.uuid == "151894779") {
+        return await Controller.delReminder(obj).then(async (result) => {
+
+          console.log(result)
+          if (result == 1) {
+            bot.sendMessage(msg.chat.id, "@Delete success.")
+          } else {
+            bot.sendMessage(msg.chat.id, "@Delete failed. Please check syntax. It must be @delete [givenId]")
+          }
+        })
+      } else {
+        bot.sendMessage(msg.chat.id, "@Delete failed. You are not the owner of this reminder. Only the owner of this @remind can delete this.")
+      }
+    })
+
+  } catch (err) {
+    console.log(err)
+  }
+
+})
+
+
 bot.onText(/(\/addReminder|\/add)(.*)/i, async (msg) => {
   const endOfMonth = moment().endOf('month').format('DD');
   let obj = {
@@ -184,7 +253,8 @@ bot.onText(/(\/addReminder|\/add)(.*)/i, async (msg) => {
     remindertime: "",
     addedon: "",
     addedby: "",
-    description: ""
+    description: "",
+    type: ""
   }
   if (true) {
     // if (msg.from.id == adminId) {
@@ -285,4 +355,62 @@ bot.onText(/^(\/getcode)$/i, (msg) => {
   }
 });
 
+bot.onText(/^(\/help)$/i, (msg) => {
+  const commands = [
+    "/getSchedule or /get - Show all reminders",
+    "/resync - Refresh all reminders",
+    "/seejobs or /see - Check all scheduled jobs",
+    "/delReminder or /del <ID> - Delete a reminder by ID",
+    "/registeradmin - Add admin user",
+    "@remind - Reply to a message to request the bot to send reminders every day @ 0730H and 1730H"
+  ];
 
+  const helpMessage = commands.join("\n");
+
+  bot.sendMessage(msg.chat.id, helpMessage);
+});
+
+
+const job = () => schedule.scheduleJob('30 07 * * 1-5', async () => {
+  return await Controller.findAll("V2").then((result) => {
+    // console.log(result)
+    for (let i = 0; i < result.length; i++) {
+      console.log(result[i])
+      bot.sendMessage(result[i].chatId, "<b>This Reminder is sent every weekday @ 0730H and 1730H. To stop, type @delete " + result[i].msgId + "</b>", { reply_to_message_id: result[i].remindMsgId, parse_mode: 'HTML' })
+    }
+  })
+
+})
+
+const jobNight = () => schedule.scheduleJob('30 17 * * 1-5', async () => {
+  return await Controller.findAll("V2").then((result) => {
+    // console.log(result)
+    for (let i = 0; i < result.length; i++) {
+      console.log(result[i])
+      bot.sendMessage(result[i].chatId, "<b>This Reminder is sent every weekday @ 0730H and 1730H. To stop, type @delete " + result[i].msgId + "</b>", { reply_to_message_id: result[i].remindMsgId, parse_mode: 'HTML' })
+    }
+  })
+})
+
+const ctlPoll = () => schedule.scheduleJob('30 7 1 * *', async () => {
+  let month = moment().format("MMMM")
+  let lastDay = moment().endOf('month').format("ddd, MMM DD")
+  // let lastUnixTime = moment().endOf('month').unix()
+  bot.sendPoll(151894779, `Please do your ${month} CTL.\nTo be completed by ${lastDay}`, ['Done', 'Not Done'], { 'is_anonymous': false, 'explanation_entities': "test" })
+})
+
+// const testJob = () => schedule.scheduleJob('*/1 * * * * *', async () => {
+//   return await Controller.findAll("V2").then((result) => {
+//     // console.log(result)
+//     for (let i = 0; i < result.length; i++) {
+//       console.log(result[i])
+//       bot.sendMessage(result[i].chatId, "<pre>This Reminder is sent everyday @ 0730H and 1730H. To stop, type @delete " + result[i].msgId + "</pre>", { reply_to_message_id: result[i].remindMsgId, parse_mode: 'HTML' })
+//     }
+//   })
+
+// })
+
+// testJob()
+job()
+jobNight()
+ctlPoll()
