@@ -190,7 +190,7 @@ bot.onText(/(\@remind)/i, async (msg) => {
     }
 
     return await Controller.addReminder(obj).then(async (result) => {
-      bot.sendMessage(obj.chatId, "Noted. Reminders will be sent everyday at 0730H and 1130H", {
+      bot.sendMessage(obj.chatId, "Noted. Reminders will be sent everyday at 0730H and 1700H", {
         reply_to_message_id: obj.remindMsgId
       })
       console.log(result)
@@ -223,7 +223,7 @@ bot.onText(/(\@delete)/i, async (msg) => {
     }
     return await Controller.findByMsgId(obj.msgId).then(async (result) => {
       console.log(msg.from.id)
-      if (result.uuid == msg.from.id || result.uuid == "151894779") {
+      if (result.uuid == msg.from.id || msg.from.id == "151894779") {
         return await Controller.delReminder(obj).then(async (result) => {
 
           console.log(result)
@@ -362,7 +362,7 @@ bot.onText(/^(\/help)$/i, (msg) => {
     "/seejobs or /see - Check all scheduled jobs",
     "/delReminder or /del <ID> - Delete a reminder by ID",
     "/registeradmin - Add admin user",
-    "@remind - Reply to a message to request the bot to send reminders every day @ 0730H and 1730H"
+    "@remind - Reply to a message to request the bot to send reminders every day @ 0730H and 1700H"
   ];
 
   const helpMessage = commands.join("\n");
@@ -376,18 +376,18 @@ const job = () => schedule.scheduleJob('30 07 * * 1-5', async () => {
     // console.log(result)
     for (let i = 0; i < result.length; i++) {
       console.log(result[i])
-      bot.sendMessage(result[i].chatId, "<b>This Reminder is sent every weekday @ 0730H and 1730H. To stop, type @delete " + result[i].msgId + "</b>", { reply_to_message_id: result[i].remindMsgId, parse_mode: 'HTML' })
+      bot.sendMessage(result[i].chatId, "<b>This Reminder is sent every weekday @ 0730H and 1700H. To stop, type @delete " + result[i].msgId + "</b>", { reply_to_message_id: result[i].remindMsgId, parse_mode: 'HTML' })
     }
   })
 
 })
 
-const jobNight = () => schedule.scheduleJob('30 17 * * 1-5', async () => {
+const jobNight = () => schedule.scheduleJob('0 17 * * 1-5', async () => {
   return await Controller.findAll("V2").then((result) => {
     // console.log(result)
     for (let i = 0; i < result.length; i++) {
       console.log(result[i])
-      bot.sendMessage(result[i].chatId, "<b>This Reminder is sent every weekday @ 0730H and 1730H. To stop, type @delete " + result[i].msgId + "</b>", { reply_to_message_id: result[i].remindMsgId, parse_mode: 'HTML' })
+      bot.sendMessage(result[i].chatId, "<b>This Reminder is sent every weekday @ 0730H and 1700H. To stop, type @delete " + result[i].msgId + "</b>", { reply_to_message_id: result[i].remindMsgId, parse_mode: 'HTML' })
     }
   })
 })
