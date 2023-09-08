@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { spawn } from "child_process";
 import Controller from './database/controller.js';
-
+import sleep from 'sleep-promise';
 
 const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 const adminId = process.env.ADMINID;
@@ -14,15 +14,22 @@ const telegramGroupId = process.env.TELEGRAMGROUPID
 
 const init = async () => {
   bot.sendMessage(adminId, "Reminders checked and updated.");
+
   await Controller.cleanReminders()
   return await Controller.findAll().then((result) => {
     // console.log(result)
     for (let i = 0; i < result.length; i++) {
       // console.log("1 " + result[i].remindertime[2]+result[i].remindertime[3]+ " " + result[i].remindertime[0]+result[i].remindertime[1] + " " + result[i].reminderdate + " * *")
       schedule.scheduleJob("1 " + result[i].remindertime[2] + result[i].remindertime[3] + " " + result[i].remindertime[0] + result[i].remindertime[1] + " " + result[i].reminderdate + " * *", async () => {
+        let month = moment().format("MMMM")
         bot.sendMessage(
           telegramGroupId,
-          `Reminder: ${result[i].description}. Thank you`
+          // result[i].description,
+          // `Reminder: ${result[i].description}. Thank you`,
+          `Please do your ${month} CTL\n <b><i>Update the Sharepoint with your result</i></b>. Thank you`,
+          {
+            parse_mode: "HTML",
+          }
         );
       })
     }
@@ -55,6 +62,7 @@ bot.onText(/^(\/getSchedule|\/get)$/i, async (msg) => {
 
 bot.onText(/^(\/resync)$/i, async (msg) => {
   bot.sendMessage(adminId, "Reminders checked and updated.");
+
   await Controller.cleanReminders()
   let jobList = schedule.scheduledJobs;
   let jobNameList = [];
@@ -69,9 +77,15 @@ bot.onText(/^(\/resync)$/i, async (msg) => {
     for (let i = 0; i < result.length; i++) {
       // console.log("1 " + result[i].remindertime[2]+result[i].remindertime[3]+ " " + result[i].remindertime[0]+result[i].remindertime[1] + " " + result[i].reminderdate + " * *")
       schedule.scheduleJob("1 " + result[i].remindertime[2] + result[i].remindertime[3] + " " + result[i].remindertime[0] + result[i].remindertime[1] + " " + result[i].reminderdate + " * *", async () => {
+        let month = moment().format("MMMM")
         bot.sendMessage(
           telegramGroupId,
-          `Reminder: ${result[i].description}. Thank you`
+          // result[i].description,
+          // `Reminder: ${result[i].description}. Thank you`,
+          `<u>Please do your ${month} CTL.</u>\n<b><i>Update the Sharepoint with your result</i></b>.\nThank you.`,
+          {
+            parse_mode: "HTML",
+          }
         );
       })
     }
@@ -102,7 +116,7 @@ bot.onText(/^(\/seejobs|\/see)$/i, async (msg) => {
 });
 
 bot.onText(/(\/delReminder|\/del)(.*)/i, async (msg) => {
-  let id = msg.text.split(" ")[1];
+  let id = msg.text.split(" ")[1];  
   if (msg.from.id == adminId) {
     if (parseInt(id)) {
       return await Controller.findReminder(id).then(async (res) => {
@@ -190,9 +204,27 @@ bot.onText(/(\@remind)/i, async (msg) => {
     }
 
     return await Controller.addReminder(obj).then(async (result) => {
-      bot.sendMessage(obj.chatId, "Noted. Reminders will be sent everyday at 0730H and 1700H", {
+      let savedMsg = null;
+      bot.sendMessage(obj.chatId, "Noted. Reminders will be sent every weekday at 0730H and 1700H. Deleting in ...", {
         reply_to_message_id: obj.remindMsgId
+      }).then(async (prevMsg) => {
+        savedMsg = prevMsg
+        console.log(prevMsg)
+        for (let i = 15; i != 0; i--) {
+          // console.log(`Noted. Reminders will be sent everyday at 0730H and 1700H. Deleting in ${i}`)
+          await sleep(1000);
+
+          const opts = {
+            chat_id: obj.chatId,
+            message_id: prevMsg.message_id
+          }
+          await bot.editMessageText(`Noted. Reminders will be sent every weekday at 0730H and 1700H. Deleting in ${i}`, opts)
+          if (i == 1) {
+            await bot.deleteMessage(obj.chatId, prevMsg.message_id)
+          }
+        }
       })
+
       console.log(result)
     })
   } catch (err) {
@@ -414,3 +446,4 @@ const ctlPoll = () => schedule.scheduleJob('30 7 1 * *', async () => {
 job()
 jobNight()
 ctlPoll()
+
