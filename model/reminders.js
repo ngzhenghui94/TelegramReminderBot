@@ -10,6 +10,7 @@ Reminders.init({
     reminderdate: Sequelize.STRING,
     remindertime: Sequelize.STRING,
     description: Sequelize.STRING,
+    sendTo: Sequelize.STRING,
 },{
     sequelize,
     modelName: "Reminders",
