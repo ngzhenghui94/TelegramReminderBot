@@ -1,10 +1,10 @@
-create table Reminders
-(
-    id               int auto_increment
-        primary key,
-    uuid             varchar(255) null,
-    addedon          datetime     null,
-    addedby          varchar(255) null,
-    reminderdatetime varchar(255) null
+CREATE TABLE Reminders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(255) NULL,
+    addedon DATETIME NULL,
+    addedby VARCHAR(255) NULL,
+    reminderdate VARCHAR(255) NULL,
+    remindertime VARCHAR(255) NULL,
+    description VARCHAR(1024) NULL,
+    sendTo VARCHAR(255) NULL
 );
-
